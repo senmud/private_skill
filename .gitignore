@@ -1,3 +1,4 @@
 node_modules/
 openclaw-pps-plugin/node_modules/
 openclaw-pps-plugin/dist/
+openclaw-pps-plugin/package-lock.json
