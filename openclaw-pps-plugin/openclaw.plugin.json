@@ -1,0 +1,24 @@
+{
+  "id": "openclaw-pps",
+  "name": "Feishu PPS Privacy",
+  "description": "Per-session privacy policy for Feishu: strict vs owner-DM, tool interception, audit, owner notify",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "ownerOpenId": {
+        "type": "string",
+        "description": "Feishu user open_id (ou_xxx) for owner DM; used to classify OWNER_DM vs NON_OWNER_DM"
+      },
+      "auditPath": {
+        "type": "string",
+        "description": "Optional override for JSONL audit file path"
+      },
+      "notifyOwnerOnBlock": {
+        "type": "boolean",
+        "default": true,
+        "description": "Send summary to owner DM when GROUP or NON_OWNER_DM triggers block/redact"
+      }
+    }
+  }
+}
