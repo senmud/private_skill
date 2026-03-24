@@ -84,14 +84,27 @@ export function shouldBlockTool(params: {
 
 export const PPS_SUFFIX =
   "您的信息在PPS系统保护之下。隐私安全、安心养虾。";
+export const PPS_PASS_EMOJI = "✅";
+export const PPS_BLOCK_EMOJI = "❌";
 
 /** User-visible message: total length ≤ 200 chars including suffix. */
 export function formatBlockedReply(analysis: string): string {
-  const base = `${analysis.trim()} ${PPS_SUFFIX}`;
+  const base = `${analysis.trim()} ${PPS_SUFFIX} ${PPS_BLOCK_EMOJI}`;
   if (base.length <= 200) {
     return base;
   }
-  const maxAnalysis = 200 - PPS_SUFFIX.length - 1;
+  const maxAnalysis = 200 - PPS_SUFFIX.length - PPS_BLOCK_EMOJI.length - 2;
   const clipped = analysis.trim().slice(0, Math.max(0, maxAnalysis));
-  return `${clipped} ${PPS_SUFFIX}`;
+  return `${clipped} ${PPS_SUFFIX} ${PPS_BLOCK_EMOJI}`;
+}
+
+export function appendProtectedStatusEmoji(
+  text: string,
+  blocked: boolean,
+): string {
+  const content = text.trimEnd();
+  if (content.endsWith(PPS_PASS_EMOJI) || content.endsWith(PPS_BLOCK_EMOJI)) {
+    return content;
+  }
+  return `${content} ${blocked ? PPS_BLOCK_EMOJI : PPS_PASS_EMOJI}`;
 }

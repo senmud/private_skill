@@ -18,6 +18,11 @@
         "type": "boolean",
         "default": true,
         "description": "Send summary to owner DM when GROUP or NON_OWNER_DM triggers block/redact"
+      },
+      "debug": {
+        "type": "boolean",
+        "default": false,
+        "description": "Enable verbose PPS debug logs for hook decisions and message emoji appending"
       }
     }
   }

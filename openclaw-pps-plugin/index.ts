@@ -6,6 +6,7 @@ import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
 import path from "node:path";
 import { appendAudit, readAuditRange } from "./src/audit.js";
 import {
+  appendProtectedStatusEmoji,
   formatBlockedReply,
   isStrictScenario,
   resolveScenario,
@@ -49,11 +50,13 @@ export default definePluginEntry({
     const pc = api.pluginConfig ?? {};
     const ownerOpenId = pc.ownerOpenId as string | undefined;
     const notify = pc.notifyOwnerOnBlock !== false;
+    const debug = pc.debug === true;
     const stateDir = api.runtime.state.resolveStateDir();
     const auditPath =
       (pc.auditPath as string | undefined) ?? defaultAuditPath(stateDir);
 
     const scenarioBySession = new Map<string, PpsScenario>();
+    const blockedRunIds = new Set<string>();
 
     api.on("inbound_claim", (event, ctx) => {
       if (ctx.channelId !== "feishu" && ctx.channelId !== "lark") {
@@ -106,7 +109,20 @@ export default definePluginEntry({
         toolArgs: event.params,
       });
       if (!decision.block) {
+        if (debug) {
+          api.logger.debug?.(
+            `[pps][before_tool_call] allow tool=${event.toolName} runId=${event.runId ?? "none"} sessionKey=${ctx.sessionKey ?? "none"}`,
+          );
+        }
         return;
+      }
+      if (event.runId) {
+        blockedRunIds.add(event.runId);
+      }
+      if (debug) {
+        api.logger.info(
+          `[pps][before_tool_call] block tool=${event.toolName} reason=${decision.reason} runId=${event.runId ?? "none"} sessionKey=${ctx.sessionKey ?? "none"}`,
+        );
       }
 
       const reasonText =
@@ -140,6 +156,23 @@ export default definePluginEntry({
       return {
         block: true,
         blockReason: formatBlockedReply(reasonText),
+      };
+    });
+
+    api.on("message_sending", (event) => {
+      const runId = (event.metadata as { runId?: string } | undefined)?.runId;
+      const blocked = Boolean(runId && blockedRunIds.has(runId));
+      if (runId && blocked) {
+        blockedRunIds.delete(runId);
+      }
+      const nextContent = appendProtectedStatusEmoji(event.content, blocked);
+      if (debug) {
+        api.logger.info(
+          `[pps][message_sending] runId=${runId ?? "none"} blocked=${blocked ? "yes" : "no"} hasEmoji=${nextContent.endsWith("✅") || nextContent.endsWith("❌") ? "yes" : "no"}`,
+        );
+      }
+      return {
+        content: nextContent,
       };
     });
 

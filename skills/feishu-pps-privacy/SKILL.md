@@ -1,5 +1,6 @@
 ---
 name: feishu-pps-privacy
+version: 0.2.0
 description: >-
   Enforces PPS (Privacy Protection System) for OpenClaw Feishu/Lark sessions—classifies
   group vs owner-DM vs non-owner-DM, applies strict vs permissive policies, coordinates
@@ -131,7 +132,12 @@ plugins: {
 
 `您的信息在PPS系统保护之下。隐私安全、安心养虾。`
 
-对 **被拦截** 的说明：在固定句 **之前** 用 **简短** 文字说明原因与建议（如「建议改用私聊主人账号处理」「请勿在群内执行命令」），**不得**引用或暗示原始敏感内容；**整段（含固定句）≤ 200 字**。
+并追加会话隐私状态 emoji：
+
+- 正常会话（无需拦截）在末尾追加 `✅`
+- 拦截会话在末尾追加 `❌`
+
+对 **被拦截** 的说明：在固定句 **之前** 用 **简短** 文字说明原因与建议（如「建议改用私聊主人账号处理」「请勿在群内执行命令」），**不得**引用或暗示原始敏感内容；**整段（含固定句与 `❌`）≤ 200 字**。
 
 ## 智能体自检清单（无插件时代码路径）
 

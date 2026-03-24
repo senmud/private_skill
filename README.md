@@ -12,6 +12,7 @@
 - **审计与报告**：拦截与分类事件写入 JSONL；提供 `pps-report` 思路与 CLI 注册，可按时间段汇总 **群聊 + 非主人单聊** 行为（不含用户原文）。
 - **主人侧通知（可扩展）**：严格场景下触发拦截时，可对接向主人飞书单聊推送摘要（当前实现含审计与日志占位，发消息需接入你们环境中的 Feishu outbound）。
 - **统一用户体验**：拦截说明使用固定尾句「您的信息在PPS系统保护之下。隐私安全、安心养虾。」，且整段（含尾句）控制在 **200 字以内**，不回流敏感原文。
+- **状态可视化**：正常返回末尾追加 `✅`，拦截返回末尾追加 `❌`，明确当前会话处于隐私保护通过/拦截状态。
 - **OpenClaw Skill**：`skills/feishu-pps-privacy/SKILL.md`，符合 [Creating Skills](https://docs.openclaw.ai/tools/creating-skills) / [Skills](https://docs.openclaw.ai/tools/skills) 的加载约定。
 
 ---

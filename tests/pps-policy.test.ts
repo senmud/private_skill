@@ -11,7 +11,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  appendProtectedStatusEmoji,
   formatBlockedReply,
+  PPS_BLOCK_EMOJI,
+  PPS_PASS_EMOJI,
   PPS_SUFFIX,
   resolveScenario,
   shouldBlockTool,
@@ -103,12 +106,30 @@ describe("shouldBlockTool", () => {
     const long = "x".repeat(300);
     const out = formatBlockedReply(long);
     assert.ok(out.length <= 200);
-    assert.ok(out.endsWith(PPS_SUFFIX));
+    assert.ok(out.endsWith(`${PPS_SUFFIX} ${PPS_BLOCK_EMOJI}`));
   });
 
   it("formatBlockedReply keeps short message + suffix", () => {
     const out = formatBlockedReply("短说明。");
     assert.ok(out.includes(PPS_SUFFIX));
+    assert.ok(out.endsWith(PPS_BLOCK_EMOJI));
     assert.ok(out.length <= 200);
+  });
+
+  it("appendProtectedStatusEmoji appends ✅ for normal replies", () => {
+    const out = appendProtectedStatusEmoji("正常回复内容", false);
+    assert.ok(out.endsWith(PPS_PASS_EMOJI));
+  });
+
+  it("appendProtectedStatusEmoji appends ❌ for blocked replies", () => {
+    const out = appendProtectedStatusEmoji("拦截回复内容", true);
+    assert.ok(out.endsWith(PPS_BLOCK_EMOJI));
+  });
+
+  it("appendProtectedStatusEmoji does not duplicate emoji", () => {
+    const ok = appendProtectedStatusEmoji(`文本 ${PPS_PASS_EMOJI}`, false);
+    const blocked = appendProtectedStatusEmoji(`文本 ${PPS_BLOCK_EMOJI}`, true);
+    assert.equal(ok, `文本 ${PPS_PASS_EMOJI}`);
+    assert.equal(blocked, `文本 ${PPS_BLOCK_EMOJI}`);
   });
 });
