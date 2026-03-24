@@ -5,6 +5,7 @@
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
 import path from "node:path";
 import { appendAudit, readAuditRange } from "./src/audit.js";
+import { notifyOwnerFeishuDm } from "./src/feishu-notify.js";
 import {
   appendProtectedStatusEmoji,
   formatBlockedReply,
@@ -51,6 +52,7 @@ export default definePluginEntry({
     const ownerOpenId = pc.ownerOpenId as string | undefined;
     const notify = pc.notifyOwnerOnBlock !== false;
     const debug = pc.debug === true;
+    const feishuNotifyAccountId = pc.feishuNotifyAccountId as string | undefined;
     const stateDir = api.runtime.state.resolveStateDir();
     const auditPath =
       (pc.auditPath as string | undefined) ?? defaultAuditPath(stateDir);
@@ -148,9 +150,32 @@ export default definePluginEntry({
           severity: "medium",
           reason: "owner_digest",
         });
-        api.logger.info(
-          `[pps] notify owner (${ownerOpenId}): blocked ${event.toolName} in ${scenario} — implement Feishu DM send here`,
-        );
+        const ts = new Date().toISOString();
+        const digest = [
+          "[PPS] 拦截通知",
+          `时间: ${ts}`,
+          `场景: ${scenario}`,
+          `工具: ${event.toolName}`,
+          `原因码: ${decision.reason}`,
+          "说明: 以上为策略摘要，不含用户原文。",
+        ].join("\n");
+        void (async () => {
+          try {
+            await notifyOwnerFeishuDm({
+              openclawConfig: api.config as unknown as Record<string, unknown>,
+              ownerOpenId,
+              body: digest,
+              feishuAccountId: feishuNotifyAccountId,
+            });
+            if (debug) {
+              api.logger.info(`[pps] owner DM sent to ${ownerOpenId}`);
+            }
+          } catch (err) {
+            api.logger.warn(
+              `[pps] owner DM failed: ${String(err)} — check channels.feishu credentials and bot permissions (im:message:send_as_bot)`,
+            );
+          }
+        })();
       }
 
       return {

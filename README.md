@@ -23,7 +23,7 @@
 |------|------|
 | `skills/feishu-pps-privacy/SKILL.md` | OpenClaw Agent Skill（策略、话术、SDK 挂载说明） |
 | `openclaw-pps-plugin/` | OpenClaw 原生插件（TypeScript）：钩子、审计、CLI |
-| `tests/` | 策略单元测试源码与用例说明（`pps-policy.test.ts`、`pps-policy-cases.md`） |
+| `tests/` | 策略与飞书通知测试（`pps-policy.test.ts`、`feishu-notify.test.ts` 及对应 `*-cases.md`） |
 | `scripts/install-openclaw-pps-plugin.sh` | 按脚本位置解析插件目录，安装不依赖仓库绝对路径 |
 | `package.json` | 根目录脚本：`npm test` 运行上述测试（依赖 `tsx`） |
 | `README.md` | 本说明 |
@@ -79,6 +79,8 @@ OpenClaw 从以下来源加载技能（优先级见 [Skills](https://docs.opencl
         config: {
           ownerOpenId: "ou_xxxxxxxx",
           notifyOwnerOnBlock: true,
+          // feishuNotifyAccountId: "main",
+          // debug: true,
           // auditPath: "/可选/自定义/audit.jsonl"
         },
       },
@@ -90,8 +92,12 @@ OpenClaw 从以下来源加载技能（优先级见 [Skills](https://docs.opencl
 | 配置项 | 含义 |
 |--------|------|
 | `ownerOpenId` | 主人飞书用户 `open_id`（`ou_xxx`），用于区分主人单聊与非主人单聊 |
-| `notifyOwnerOnBlock` | 是否在严格场景拦截后尝试通知主人（需自行接通飞书发送） |
+| `notifyOwnerOnBlock` | 严格场景拦截后是否向主人飞书单聊推送摘要（需 `channels.feishu` 已配置 `appId`/`appSecret`，且需 `im:message:send_as_bot` 等权限） |
+| `feishuNotifyAccountId` | 可选，使用 `channels.feishu.accounts` 下哪个账号发通知；默认 `defaultAccount` 或 `default` |
+| `debug` | 可选，打印 PPS 调试日志 |
 | `auditPath` | 可选，审计 JSONL 文件路径；默认在 OpenClaw state 目录下插件子目录中 |
+
+**主人通知**：插件会读取 **`openclaw.json` 里已有的 `channels.feishu`**（与机器人通道同源）获取 `tenant_access_token` 并调用 `im/v1/messages` 向 `ownerOpenId` 发文本。若未配置飞书应用或 token 失败，日志会出现 `owner DM failed`。
 
 ### 四、审计与报告
 
@@ -108,6 +114,8 @@ OpenClaw 从以下来源加载技能（优先级见 [Skills](https://docs.opencl
 
 - `tests/pps-policy.test.ts`：可执行测试（`node:test` + `tsx` 直接跑 TypeScript）
 - `tests/pps-policy-cases.md`：用例表与需求对照
+- `tests/feishu-notify.test.ts`：飞书主人通知（凭证解析 + mock HTTP）
+- `tests/feishu-notify-cases.md`：飞书通知用例说明
 - `tests/README.md`：运行方式说明
 
 在 **仓库根目录** 执行（首次需 `npm install` 安装根目录 `devDependencies`）：

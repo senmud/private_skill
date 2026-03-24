@@ -6,6 +6,8 @@
 |------|------|
 | `pps-policy.test.ts` | 可执行测试（`node:test`），导入 `openclaw-pps-plugin/src/pps-policy.ts` |
 | `pps-policy-cases.md` | 用例表与需求对照，便于评审与归档 |
+| `feishu-notify.test.ts` | 飞书主人通知：凭证解析 + mock `fetch` 的功能测试 |
+| `feishu-notify-cases.md` | 上述用例说明 |
 
 ## 运行
 

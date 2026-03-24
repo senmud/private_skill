@@ -1,6 +1,6 @@
 ---
 name: feishu-pps-privacy
-version: 0.2.0
+version: 0.3.0
 description: >-
   Enforces PPS (Privacy Protection System) for OpenClaw Feishu/Lark sessions—classifies
   group vs owner-DM vs non-owner-DM, applies strict vs permissive policies, coordinates

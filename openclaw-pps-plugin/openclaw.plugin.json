@@ -23,6 +23,10 @@
         "type": "boolean",
         "default": false,
         "description": "Enable verbose PPS debug logs for hook decisions and message emoji appending"
+      },
+      "feishuNotifyAccountId": {
+        "type": "string",
+        "description": "Optional Feishu account key under channels.feishu.accounts (defaults to defaultAccount or 'default')"
       }
     }
   }

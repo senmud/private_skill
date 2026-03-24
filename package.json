@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --import tsx/esm --test tests/pps-policy.test.ts"
+    "test": "node --import tsx/esm --test tests/pps-policy.test.ts tests/feishu-notify.test.ts"
   },
   "devDependencies": {
     "tsx": "^4.19.2",
