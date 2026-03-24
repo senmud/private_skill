@@ -12,7 +12,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   appendProtectedStatusEmoji,
+  consumePendingBlockForOutbound,
+  extractFeishuPeerIdFromSessionKey,
   formatBlockedReply,
+  normalizeFeishuChannelId,
   PPS_BLOCK_EMOJI,
   PPS_PASS_EMOJI,
   PPS_SUFFIX,
@@ -131,5 +134,92 @@ describe("shouldBlockTool", () => {
     const blocked = appendProtectedStatusEmoji(`文本 ${PPS_BLOCK_EMOJI}`, true);
     assert.equal(ok, `文本 ${PPS_PASS_EMOJI}`);
     assert.equal(blocked, `文本 ${PPS_BLOCK_EMOJI}`);
+  });
+});
+
+describe("extractFeishuPeerIdFromSessionKey", () => {
+  it("parses group peer", () => {
+    assert.equal(
+      extractFeishuPeerIdFromSessionKey(
+        "agent:main:feishu:group:oc_abc123",
+      ),
+      "oc_abc123",
+    );
+  });
+
+  it("parses direct peer (per-channel-peer)", () => {
+    assert.equal(
+      extractFeishuPeerIdFromSessionKey("agent:main:feishu:direct:ou_xyz"),
+      "ou_xyz",
+    );
+  });
+
+  it("parses direct peer (per-account-channel-peer)", () => {
+    assert.equal(
+      extractFeishuPeerIdFromSessionKey(
+        "agent:main:feishu:myacct:direct:ou_peer",
+      ),
+      "ou_peer",
+    );
+  });
+
+  it("strips thread suffix before parsing", () => {
+    assert.equal(
+      extractFeishuPeerIdFromSessionKey(
+        "agent:main:feishu:group:oc_t:thread:99",
+      ),
+      "oc_t",
+    );
+  });
+});
+
+describe("consumePendingBlockForOutbound", () => {
+  it("matches outbound to by peer id", () => {
+    const pending = [
+      {
+        sessionKey: "agent:main:feishu:direct:ou_match",
+        channelId: "feishu",
+      },
+    ];
+    assert.equal(
+      consumePendingBlockForOutbound(pending, "feishu", "ou_match"),
+      true,
+    );
+    assert.equal(pending.length, 0);
+  });
+
+  it("treats lark and feishu as the same channel for matching", () => {
+    const pending = [
+      {
+        sessionKey: "agent:main:feishu:direct:ou_match",
+        channelId: "feishu",
+      },
+    ];
+    assert.equal(
+      consumePendingBlockForOutbound(pending, "lark", "ou_match"),
+      true,
+    );
+    assert.equal(pending.length, 0);
+  });
+
+  it("does not consume when to differs", () => {
+    const pending = [
+      {
+        sessionKey: "agent:main:feishu:direct:ou_a",
+        channelId: "feishu",
+      },
+    ];
+    assert.equal(
+      consumePendingBlockForOutbound(pending, "feishu", "ou_b"),
+      false,
+    );
+    assert.equal(pending.length, 1);
+  });
+});
+
+describe("normalizeFeishuChannelId", () => {
+  it("maps lark to feishu", () => {
+    assert.equal(normalizeFeishuChannelId("lark"), "feishu");
+    assert.equal(normalizeFeishuChannelId("Lark"), "feishu");
   });
 });

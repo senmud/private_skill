@@ -108,3 +108,76 @@ export function appendProtectedStatusEmoji(
   }
   return `${content} ${blocked ? PPS_BLOCK_EMOJI : PPS_PASS_EMOJI}`;
 }
+
+/** OpenClaw aliases `lark` → `feishu` for delivery; normalize for comparisons. */
+export function normalizeFeishuChannelId(channel: string): string {
+  const c = channel.trim().toLowerCase();
+  return c === "lark" ? "feishu" : c;
+}
+
+/** Strip `:thread:…` suffix so peer segment matches outbound `to`. */
+export function stripThreadSuffixFromSessionKey(sessionKey: string): string {
+  return sessionKey.replace(/:thread:[^:]+$/i, "").trim();
+}
+
+/**
+ * Extract Feishu/Lark peer id (e.g. oc_ / ou_) from agent session keys built by
+ * OpenClaw (`…:group:…`, `…:direct:…`, `…:account:direct:…`). Returns undefined
+ * for legacy main-only keys with no peer segment.
+ */
+export function extractFeishuPeerIdFromSessionKey(
+  sessionKey: string,
+): string | undefined {
+  const s = stripThreadSuffixFromSessionKey(sessionKey);
+  const lower = s.toLowerCase();
+  if (!lower.includes("feishu") && !lower.includes("lark")) return undefined;
+  const patterns = [
+    /:(?:feishu|lark):[^:]+:direct:([a-z0-9_]+)$/i,
+    /:(?:feishu|lark):direct:([a-z0-9_]+)$/i,
+    /:(?:feishu|lark):group:([a-z0-9_]+)$/i,
+  ];
+  for (const p of patterns) {
+    const m = s.match(p);
+    if (m?.[1]) return m[1].toLowerCase();
+  }
+  return undefined;
+}
+
+export type PendingBlockEntry = { sessionKey: string; channelId: string };
+
+/**
+ * Correlate a blocked tool call with the next outbound message. OpenClaw
+ * `message_sending` does not pass `runId` in metadata — match `event.to` to the
+ * peer id embedded in `sessionKey`, or FIFO-fallback when the key has no peer
+ * (e.g. main DM scope).
+ */
+export function consumePendingBlockForOutbound(
+  pending: PendingBlockEntry[],
+  channel: string,
+  to: string,
+): boolean {
+  const ch = normalizeFeishuChannelId(channel);
+  if (ch !== "feishu") return false;
+  const toNorm = to.trim().toLowerCase();
+  if (!toNorm) return false;
+
+  for (let i = 0; i < pending.length; i++) {
+    const p = pending[i];
+    if (normalizeFeishuChannelId(p.channelId) !== ch) continue;
+    const peer = extractFeishuPeerIdFromSessionKey(p.sessionKey);
+    if (peer && peer === toNorm) {
+      pending.splice(i, 1);
+      return true;
+    }
+  }
+
+  for (let i = 0; i < pending.length; i++) {
+    const p = pending[i];
+    if (normalizeFeishuChannelId(p.channelId) !== ch) continue;
+    if (!extractFeishuPeerIdFromSessionKey(p.sessionKey)) {
+      pending.splice(i, 1);
+      return true;
+    }
+  }
+  return false;
+}

@@ -8,10 +8,14 @@ import { appendAudit, readAuditRange } from "./src/audit.js";
 import { notifyOwnerFeishuDm } from "./src/feishu-notify.js";
 import {
   appendProtectedStatusEmoji,
+  consumePendingBlockForOutbound,
   formatBlockedReply,
   isStrictScenario,
+  normalizeFeishuChannelId,
   resolveScenario,
   shouldBlockTool,
+  stripThreadSuffixFromSessionKey,
+  type PendingBlockEntry,
   type PpsScenario,
 } from "./src/pps-policy.js";
 
@@ -25,6 +29,11 @@ function defaultAuditPath(stateDir: string): string {
  * Heuristic: Feishu session keys often embed `oc_*` (group) or `ou_*` (user).
  * When inbound_claim did not run, fall back to this; align with your gateway version if needed.
  */
+function isFeishuLikeSessionKey(sessionKey: string): boolean {
+  const lower = sessionKey.toLowerCase();
+  return lower.includes("feishu") || lower.includes("lark");
+}
+
 function inferScenarioFromSessionKey(
   sessionKey: string,
   ownerOpenId: string | undefined,
@@ -58,7 +67,8 @@ export default definePluginEntry({
       (pc.auditPath as string | undefined) ?? defaultAuditPath(stateDir);
 
     const scenarioBySession = new Map<string, PpsScenario>();
-    const blockedRunIds = new Set<string>();
+    /** Blocked tool → next Feishu/Lark outbound (OpenClaw does not pass runId in message_sending). */
+    const pendingBlockedOutbound: PendingBlockEntry[] = [];
 
     api.on("inbound_claim", (event, ctx) => {
       if (ctx.channelId !== "feishu" && ctx.channelId !== "lark") {
@@ -118,8 +128,12 @@ export default definePluginEntry({
         }
         return;
       }
-      if (event.runId) {
-        blockedRunIds.add(event.runId);
+      const sk = ctx.sessionKey;
+      if (sk && isFeishuLikeSessionKey(sk)) {
+        pendingBlockedOutbound.push({
+          sessionKey: stripThreadSuffixFromSessionKey(sk),
+          channelId: "feishu",
+        });
       }
       if (debug) {
         api.logger.info(
@@ -184,22 +198,33 @@ export default definePluginEntry({
       };
     });
 
-    api.on("message_sending", (event) => {
-      const runId = (event.metadata as { runId?: string } | undefined)?.runId;
-      const blocked = Boolean(runId && blockedRunIds.has(runId));
-      if (runId && blocked) {
-        blockedRunIds.delete(runId);
-      }
-      const nextContent = appendProtectedStatusEmoji(event.content, blocked);
-      if (debug) {
-        api.logger.info(
-          `[pps][message_sending] runId=${runId ?? "none"} blocked=${blocked ? "yes" : "no"} hasEmoji=${nextContent.endsWith("✅") || nextContent.endsWith("❌") ? "yes" : "no"}`,
+    /**
+     * OpenClaw merges `message_sending` results in hook order; later handlers win
+     * (`next.content ?? acc?.content`). Use lowest priority so we run last and
+     * the status emoji is not overwritten by other plugins.
+     */
+    api.on(
+      "message_sending",
+      (event, ctx) => {
+        const channel =
+          (event.metadata?.channel as string | undefined) ?? ctx.channelId ?? "";
+        const blocked = consumePendingBlockForOutbound(
+          pendingBlockedOutbound,
+          channel,
+          event.to,
         );
-      }
-      return {
-        content: nextContent,
-      };
-    });
+        const nextContent = appendProtectedStatusEmoji(event.content, blocked);
+        if (debug) {
+          api.logger.info(
+            `[pps][message_sending] channel=${normalizeFeishuChannelId(channel) || "none"} to=${event.to || "none"} blocked=${blocked ? "yes" : "no"} pending=${pendingBlockedOutbound.length}`,
+          );
+        }
+        return {
+          content: nextContent,
+        };
+      },
+      { priority: -10_000 },
+    );
 
     api.registerCli(
       (registrar) => {

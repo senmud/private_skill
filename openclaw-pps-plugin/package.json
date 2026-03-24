@@ -1,6 +1,6 @@
 {
   "name": "@local/openclaw-pps",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Feishu PPS privacy policy plugin for OpenClaw (hook-only)",
   "type": "module",
   "main": "./dist/index.js",

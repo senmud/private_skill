@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.3.1] - 2026-03-24
+
+### Fixed
+- **`message_sending` 拦截态与飞书出站对齐**：OpenClaw 在 `applyMessageSendingHook` 中不向 `metadata` 传入 `runId`，无法再用 `runId` 关联拦截。改为用 `sessionKey` 解析 peer（`oc_` / `ou_` 等）并与出站 `to` 匹配；无 peer 段时（如 main DM scope）对 `feishu`/`lark` 做 FIFO 回退。
+- **未拦截回复末尾 ✅**：`message_sending` 合并规则为后执行者优先（`next.content ?? acc?.content`）。为本插件注册 **`priority: -10_000`**，保证最后执行，避免被其他插件覆盖正文从而丢失状态 emoji。
+- **`lark` / `feishu` 一致化**：出站侧常规范为 `feishu`；pending 与 `consumePendingBlockForOutbound` 统一用 `normalizeFeishuChannelId`（`lark` → `feishu`）比较。
+
+### Changed
+- 扩展单测：`extractFeishuPeerIdFromSessionKey`、`consumePendingBlockForOutbound`、`normalizeFeishuChannelId`。
+- 插件与技能元数据版本号更新为 **0.3.1**。
+
 ## [0.3.0] - 2026-03-24
 
 ### Added
