@@ -1,7 +1,7 @@
 {
-  "name": "@local/openclaw-pps",
-  "version": "0.3.1",
-  "description": "Feishu PPS privacy policy plugin for OpenClaw (hook-only)",
+  "name": "@senmud/openclaw-pps",
+  "version": "0.3.2",
+  "description": "PPS privacy policy plugin for OpenClaw (hook-only)",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,6 +11,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepack": "rm -rf dist && npm run build",
     "test": "npm run test --prefix .."
   },
   "peerDependencies": {
@@ -21,7 +22,7 @@
   },
   "openclaw": {
     "extensions": [
-      "./index.ts"
+      "./dist/index.js"
     ]
   }
 }

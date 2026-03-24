@@ -1,6 +1,6 @@
 ---
 name: feishu-pps-privacy
-version: 0.3.1
+version: 0.3.2
 description: >-
   Enforces PPS (Privacy Protection System) for OpenClaw Feishu/Lark sessions—classifies
   group vs owner-DM vs non-owner-DM, applies strict vs permissive policies, coordinates
@@ -66,7 +66,7 @@ description: >-
 
 1. **发布为 npm / ClawHub 包**（生产推荐）  
    安装时使用包名，与克隆目录无关：  
-   `openclaw plugins install @你的作用域/openclaw-pps`  
+   `openclaw plugins install @senmud/openclaw-pps`  
    （以 OpenClaw 当前 `plugins install` 支持的 spec 为准，参见官方文档。）
 
 2. **仓库内脚本（开发/内网）**  

@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.3.2] - 2026-03-25
+
+### Added
+- **`scripts/publish-clawhub.sh`**：ClawHub / npm registry 发布脚本（默认 dry-run，`--publish` 才真正 `npm publish`）；支持 `CLAWHUB_REGISTRY`、`CLAWHUB_TOKEN`、`--tag`。
+- **`prepack`**：`openclaw-pps-plugin/package.json` 中 `rm -rf dist && npm run build`，避免 `npm pack` / `npm publish` 打进陈旧 `dist` 产物。
+
+### Fixed
+- **发布包入口**：`openclaw.extensions` 由 `./index.ts` 改为 **`./dist/index.js`**，与 `files` 字段一致；从 registry 安装后不再引用 tarball 中不存在的 `index.ts`。
+
+### Changed
+- **npm 包名**：`@senmud/openclaw-pps`（插件 id 仍为 `openclaw-pps`，与 `plugins.entries` 一致）。
+- **文档**：`README.md`、`SKILL.md` 中生产安装示例与 ClawHub 发布说明；`publish-clawhub.sh` 在 build 前清理 `dist`。
+
+### Changed (metadata)
+- 插件与技能 frontmatter 版本号更新为 **0.3.2**。
+
 ## [0.3.1] - 2026-03-24
 
 ### Fixed

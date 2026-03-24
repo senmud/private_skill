@@ -1,5 +1,5 @@
 /**
- * OpenClaw PPS plugin — install: `openclaw plugins install ./openclaw-pps-plugin`
+ * OpenClaw PPS plugin — publish: `@senmud/openclaw-pps`; local: `openclaw plugins install ./openclaw-pps-plugin`
  * Uses Plugin SDK: `api.on` for `inbound_claim` + `before_tool_call` (see OpenClaw types).
  */
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";

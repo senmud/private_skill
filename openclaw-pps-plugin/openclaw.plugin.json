@@ -1,6 +1,6 @@
 {
   "id": "openclaw-pps",
-  "name": "Feishu PPS Privacy",
+  "name": "Private Protection System",
   "description": "Per-session privacy policy for Feishu: strict vs owner-DM, tool interception, audit, owner notify",
   "configSchema": {
     "type": "object",

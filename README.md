@@ -27,7 +27,6 @@
 | `scripts/install-openclaw-pps-plugin.sh` | 按脚本位置解析插件目录，安装不依赖仓库绝对路径 |
 | `package.json` | 根目录脚本：`npm test` 运行上述测试（依赖 `tsx`） |
 | `README.md` | 本说明 |
-| `.gitignore` | 忽略 `node_modules/`、`dist/` 等 |
 
 ---
 
@@ -57,7 +56,7 @@ OpenClaw 从以下来源加载技能（优先级见 [Skills](https://docs.opencl
 
 **与路径无关的三种方式**（避免写死 `/Users/...` 等绝对路径）：
 
-1. **npm / ClawHub 发布后按包名安装**（推荐生产）：`openclaw plugins install @作用域/包名`。
+1. **npm / ClawHub 发布后按包名安装**（推荐生产）：`openclaw plugins install @senmud/openclaw-pps`（npm 包名；配置里插件 id 仍为 `openclaw-pps`）。
 2. **本仓库脚本**（推荐本地）：在仓库根目录执行  
    `chmod +x scripts/install-openclaw-pps-plugin.sh && ./scripts/install-openclaw-pps-plugin.sh`  
    脚本根据 **自身文件位置** 定位 `openclaw-pps-plugin/`，与当前工作目录无关。若插件目录不在默认位置，可设置 `OPENCLAW_PPS_PLUGIN_DIR`。
@@ -65,6 +64,19 @@ OpenClaw 从以下来源加载技能（优先级见 [Skills](https://docs.opencl
    `(cd openclaw-pps-plugin && npm install && npm run build) && openclaw plugins install "$(pwd)/openclaw-pps-plugin"`。
 
 安装后重启或刷新 Gateway，使插件加载。
+
+### 发布到 ClawHub（npm registry）
+
+仓库提供发布脚本：`scripts/publish-clawhub.sh`。
+
+- **先做预检（默认 dry-run，不会真正发布）**：
+  `chmod +x scripts/publish-clawhub.sh && ./scripts/publish-clawhub.sh`
+- **正式发布**（需 token）：
+  `CLAWHUB_TOKEN=你的token ./scripts/publish-clawhub.sh --publish`
+- **指定 registry / tag**：
+  `CLAWHUB_REGISTRY=https://registry.npmjs.org CLAWHUB_TOKEN=你的token ./scripts/publish-clawhub.sh --publish --tag latest`
+
+脚本会自动执行：`npm install` → `npm run build` → `npm pack --dry-run`，只有传 `--publish` 才会执行 `npm publish`。
 
 ### 三、配置 `openclaw.json`
 
